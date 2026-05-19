@@ -1,0 +1,760 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}NetflixMoi — Cine en Casa{% endblock %}
+
+{% block stylesheets %}
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap');
+
+    :root {
+        --gold:      #f5c518;
+        --gold-dark: #c9a400;
+        --bg:        #0d0d0d;
+        --surface:   #181818;
+        --surface2:  #242424;
+        --border:    rgba(245,197,24,0.15);
+        --text:      #f0f0f0;
+        --muted:     #888;
+        --green:     #1db954;
+        --red:       #e53935;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Outfit', sans-serif;
+        min-height: 100vh;
+    }
+
+    /* ─── BARRA DE NAVEGACIÓN ─────────────────────────── */
+    .topbar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 900;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 5%;
+        height: 64px;
+        background: rgba(13,13,13,0.92);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid var(--border);
+        transition: box-shadow .3s;
+    }
+    .topbar.shadow { box-shadow: 0 4px 24px rgba(0,0,0,0.6); }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+    }
+    .brand-logo {
+        width: 34px; height: 34px;
+        background: var(--gold);
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: #0d0d0d;
+        letter-spacing: -1px;
+    }
+    .brand-name {
+        font-size: 1.45rem;
+        font-weight: 900;
+        color: var(--gold);
+        letter-spacing: -0.5px;
+    }
+    .brand-name span { color: var(--text); }
+
+    .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+    .search-field {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 7px 14px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-family: inherit;
+        outline: none;
+        width: 210px;
+        transition: border-color .2s, width .3s;
+    }
+    .search-field::placeholder { color: var(--muted); }
+    .search-field:focus { border-color: var(--gold); width: 260px; }
+
+    .btn-new {
+        background: var(--gold);
+        color: #0d0d0d;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        font-family: inherit;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background .2s, transform .1s;
+    }
+    .btn-new:hover { background: var(--gold-dark); transform: scale(1.03); }
+
+    /* ─── MENSAJES FLASH ──────────────────────────────── */
+    .flashes {
+        position: fixed;
+        top: 72px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: min(480px, 90vw);
+    }
+    .flash {
+        padding: 13px 18px;
+        border-radius: 8px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        animation: fadeSlide .35s ease;
+    }
+    .flash.success { background: rgba(29,185,84,.9);  border-left: 4px solid var(--green); }
+    .flash.error   { background: rgba(229,57,53,.9);  border-left: 4px solid var(--red); }
+    @keyframes fadeSlide {
+        from { opacity: 0; transform: translateY(-14px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── HERO ────────────────────────────────────────── */
+    .hero {
+        position: relative;
+        min-height: 88vh;
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: flex-end;
+        padding: 0 5% 72px;
+        margin-top: 64px;
+        transition: background-image .4s ease, opacity .4s ease;
+    }
+    .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(to right,  rgba(13,13,13,.95) 0%, rgba(13,13,13,.3) 65%, transparent 100%),
+            linear-gradient(to top,    rgba(13,13,13,1)  0%, transparent 55%);
+    }
+
+    .hero-inner { position: relative; z-index: 2; max-width: 560px; }
+
+    .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--gold);
+        color: #0d0d0d;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        padding: 4px 12px;
+        border-radius: 4px;
+        margin-bottom: 16px;
+    }
+
+    .hero-title {
+        font-size: clamp(2.2rem, 5vw, 4.2rem);
+        font-weight: 900;
+        line-height: 1.05;
+        margin-bottom: 12px;
+    }
+
+    .hero-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-bottom: 14px;
+        font-size: 0.82rem;
+        color: var(--muted);
+    }
+    .hero-stats span { display: flex; align-items: center; gap: 4px; }
+    .hero-stats .rating { color: var(--gold); font-weight: 700; font-size: 0.9rem; }
+
+    .hero-desc {
+        font-size: 0.95rem;
+        line-height: 1.65;
+        color: rgba(240,240,240,.75);
+        margin-bottom: 26px;
+    }
+
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .btn-watch {
+        background: var(--gold);
+        color: #0d0d0d;
+        border: none;
+        padding: 13px 30px;
+        font-size: 1rem;
+        font-weight: 800;
+        font-family: inherit;
+        border-radius: 6px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background .2s, transform .1s;
+    }
+    .btn-watch:hover { background: var(--gold-dark); transform: scale(1.02); }
+
+    .btn-ghost {
+        background: rgba(255,255,255,.08);
+        color: var(--text);
+        border: 1px solid rgba(255,255,255,.18);
+        padding: 13px 26px;
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: inherit;
+        border-radius: 6px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background .2s;
+        backdrop-filter: blur(4px);
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.16); }
+
+    /* ─── SECCIÓN CATÁLOGO ────────────────────────────── */
+    .catalogue {
+        padding: 0 5% 70px;
+        margin-top: -30px;
+        position: relative;
+        z-index: 10;
+    }
+
+    .cat-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--border);
+    }
+    .cat-header h2 { font-size: 1.25rem; font-weight: 700; }
+    .cat-spacer { flex: 1; }
+    .cat-count {
+        font-size: 0.78rem;
+        color: var(--muted);
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+        gap: 18px;
+    }
+
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        position: relative;
+        transition: transform .3s, box-shadow .3s, border-color .3s;
+    }
+    .card:hover {
+        transform: translateY(-7px);
+        box-shadow: 0 16px 40px rgba(0,0,0,.7), 0 0 0 1px var(--gold);
+        border-color: var(--gold);
+        z-index: 20;
+    }
+
+    .card-img {
+        width: 100%;
+        aspect-ratio: 2/3;
+        object-fit: cover;
+        display: block;
+    }
+
+    .card-age {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(13,13,13,.85);
+        border: 1px solid var(--gold);
+        color: var(--gold);
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 4px;
+    }
+
+    .card-info {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(13,13,13,.98) 0%, rgba(13,13,13,.5) 50%, transparent 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 12px;
+        opacity: 0;
+        transition: opacity .3s;
+    }
+    .card:hover .card-info { opacity: 1; }
+
+    .card-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 8px; line-height: 1.2; }
+
+    .card-btns { display: flex; gap: 6px; }
+    .cbtn {
+        flex: 1;
+        padding: 7px 4px;
+        border: none;
+        border-radius: 5px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        transition: opacity .2s;
+        text-align: center;
+    }
+    .cbtn:hover { opacity: .82; }
+    .cbtn-play { background: var(--gold);  color: #0d0d0d; }
+    .cbtn-del  { background: var(--red);   color: #fff; }
+
+    /* Estado vacío */
+    .empty {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--muted);
+    }
+    .empty .ico { font-size: 3.5rem; margin-bottom: 18px; }
+    .empty h3 { color: var(--text); font-size: 1.3rem; margin-bottom: 8px; }
+
+    /* ─── REPRODUCTOR ─────────────────────────────────── */
+    #playerLayer {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.97);
+        z-index: 3000;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+    }
+    #playerLayer.open { display: flex; }
+
+    #nowPlaying {
+        color: var(--gold);
+        font-size: 1.15rem;
+        font-weight: 700;
+        letter-spacing: .3px;
+    }
+    #videoEl {
+        width: 92%;
+        max-width: 960px;
+        border-radius: 10px;
+        box-shadow: 0 0 60px rgba(245,197,24,.2);
+    }
+    .close-btn {
+        position: absolute;
+        top: 20px; right: 24px;
+        width: 42px; height: 42px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        color: var(--text);
+        font-size: 1.1rem;
+        cursor: pointer;
+        display: grid;
+        place-items: center;
+        transition: background .2s;
+    }
+    .close-btn:hover { background: var(--red); border-color: var(--red); }
+
+    /* ─── MODAL SUBIDA ────────────────────────────────── */
+    #uploadLayer {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.88);
+        backdrop-filter: blur(8px);
+        z-index: 4000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    #uploadLayer.open { display: flex; }
+
+    .modal {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 32px;
+        width: 100%;
+        max-width: 430px;
+        box-shadow: 0 30px 80px rgba(0,0,0,.7);
+        animation: popUp .28s ease;
+    }
+    @keyframes popUp {
+        from { opacity:0; transform: scale(.94) translateY(12px); }
+        to   { opacity:1; transform: scale(1)   translateY(0); }
+    }
+
+    .modal-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 26px;
+    }
+    .modal-top h3 {
+        font-size: 1.15rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .modal-top h3::before {
+        content: '';
+        width: 4px; height: 20px;
+        background: var(--gold);
+        border-radius: 2px;
+    }
+    .modal-x {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--muted);
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: .9rem;
+        display: grid;
+        place-items: center;
+        transition: background .2s, color .2s;
+    }
+    .modal-x:hover { background: var(--red); color: #fff; border-color: var(--red); }
+
+    .field { margin-bottom: 16px; }
+    .field label {
+        display: block;
+        font-size: .78rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        margin-bottom: 6px;
+    }
+    .field input {
+        width: 100%;
+        padding: 10px 13px;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 7px;
+        font-size: .9rem;
+        font-family: inherit;
+        outline: none;
+        transition: border-color .2s;
+    }
+    .field input:focus { border-color: var(--gold); }
+    .field input[type=file] { cursor: pointer; padding: 8px 10px; }
+
+    .btn-save {
+        width: 100%;
+        padding: 13px;
+        margin-top: 4px;
+        background: var(--gold);
+        color: #0d0d0d;
+        border: none;
+        border-radius: 7px;
+        font-size: .95rem;
+        font-weight: 800;
+        font-family: inherit;
+        cursor: pointer;
+        transition: background .2s, transform .1s;
+    }
+    .btn-save:hover { background: var(--gold-dark); transform: scale(1.01); }
+
+    /* ─── FOOTER ──────────────────────────────────────── */
+    footer {
+        text-align: center;
+        padding: 28px 5%;
+        border-top: 1px solid var(--border);
+        font-size: .8rem;
+        color: var(--muted);
+    }
+    footer strong { color: var(--gold); }
+
+    /* ─── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 580px) {
+        .search-field { width: 140px; }
+        .search-field:focus { width: 160px; }
+        .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+{# ── TOPBAR ── #}
+<nav class="topbar" id="topbar">
+    <a class="brand" href="{{ path('app_movies') }}">
+        <div class="brand-logo">N</div>
+        <span class="brand-name">Netflix<span>Moi</span></span>
+    </a>
+    <div class="topbar-right">
+        <input
+            class="search-field"
+            type="text"
+            placeholder="🔍 Buscar título..."
+            oninput="buscar(this.value)">
+        <button class="btn-new" onclick="abrirModal()">
+            ＋ Nueva Película
+        </button>
+        <a class="btn-new" href="{{ path('admin') }}" style="text-decoration:none;">
+            ⚙ Admin
+        </a>
+    </div>
+</nav>
+
+{# ── FLASHES ── #}
+<div class="flashes">
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="flash {{ label }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+{# ── HERO ── #}
+{% set hero = peliculas|first %}
+{% if hero %}
+<section class="hero" id="heroSection" style="background-image: url('{{ hero.portadaURL }}'); transition: opacity .4s;">
+    <div class="hero-inner">
+        <div class="hero-tag">⭐ En Portada</div>
+        <h1 class="hero-title">{{ hero.titulo }}</h1>
+        <div class="hero-stats">
+            <span class="rating">★ Destacada</span>
+            <span>🕐 <span class="hero-stat-val">{{ hero.duracionMin }} min</span></span>
+            <span>📅 <span class="hero-stat-val">{{ hero.fechaEstreno|date('Y') }}</span></span>
+            <span>🌍 <span class="hero-stat-val">{{ hero.pais }}</span></span>
+        </div>
+        <p class="hero-desc">
+            {{ hero.descripcion|default('La mejor selección de películas, siempre disponible para ti. Calidad de cine, comodidad de casa.') }}
+        </p>
+        <div class="hero-btns">
+            <button class="btn-watch" onclick="verPelicula('{{ hero.rutaArchivo }}','{{ hero.titulo|e('js') }}')">
+                ▶ Ver Ahora
+            </button>
+
+        </div>
+    </div>
+</section>
+{% else %}
+<section class="hero" style="background: linear-gradient(135deg,#0d0d0d 0%,#1a1a1a 100%); min-height:55vh; display:flex; align-items:center; margin-top:64px;">
+    <div class="hero-inner" style="text-align:center; margin:0 auto;">
+        <div class="hero-tag">Bienvenido</div>
+        <h1 class="hero-title" style="margin-top:14px;">Catálogo vacío</h1>
+        <p class="hero-desc" style="margin:14px auto 26px;">Añade tu primera película para comenzar.</p>
+        <button class="btn-watch" onclick="abrirModal()">＋ Añadir Película</button>
+    </div>
+</section>
+{% endif %}
+
+{# ── CATÁLOGO ── #}
+<main class="catalogue">
+    <div class="cat-header">
+        <h2>🎞 Catálogo</h2>
+        <div class="cat-spacer"></div>
+        <span class="cat-count" id="counter">{{ peliculas|length }} película{{ peliculas|length != 1 ? 's' : '' }}</span>
+    </div>
+
+    {% if peliculas|length == 0 %}
+    <div class="empty">
+        <div class="ico">🍿</div>
+        <h3>No hay películas todavía</h3>
+        <p>Usa el botón "Nueva Película" para añadir la primera.</p>
+    </div>
+    {% else %}
+    <div class="grid" id="movieGrid">
+        {% for p in peliculas %}
+        <div class="card"
+             data-titulo="{{ p.titulo|lower }}"
+             data-portada="{{ p.portadaURL }}"
+             data-fullname="{{ p.titulo|e('html_attr') }}"
+             data-desc="{{ p.descripcion|default('')|e('html_attr') }}"
+             data-duracion="{{ p.duracionMin }}"
+             data-year="{{ p.fechaEstreno|date('Y') }}"
+             data-pais="{{ p.pais }}"
+             data-archivo="{{ p.rutaArchivo }}">  
+            <span class="card-age">{{ p.clasificacionEdad }}</span>
+            <img class="card-img"
+                 src="{{ p.portadaURL }}"
+                 alt="{{ p.titulo }}"
+                 onerror="this.src='https://placehold.co/175x260/181818/f5c518?text={{ p.titulo|url_encode }}'">
+            <div class="card-info">
+                <div class="card-title">{{ p.titulo }}</div>
+                <div class="card-btns">
+                    <button class="cbtn cbtn-play"
+                            onclick="verPelicula('{{ p.rutaArchivo }}','{{ p.titulo|e('js') }}')">
+                        ▶ Ver
+                    </button>
+                    <form method="POST"
+                          action="{{ path('app_movie_delete', {id: p.id}) }}"
+                          onsubmit="return confirm('¿Eliminar «{{ p.titulo }}»?');"
+                          style="flex:1">
+                        <button type="submit" class="cbtn cbtn-del" style="width:100%">🗑</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</main>
+
+{# ── FOOTER ── #}
+<footer>
+    <p>© 2025 <strong>NetflixMoi</strong> &mdash; Proyecto académico &middot; Symfony 7 + Doctrine ORM + MySQL</p>
+</footer>
+
+{# ── REPRODUCTOR ── #}
+<div id="playerLayer" onclick="cerrarPlayer(event)">
+    <button class="close-btn" onclick="cerrarPlayer(null, true)">✕</button>
+    <div id="nowPlaying"></div>
+    <video id="videoEl" controls></video>
+</div>
+
+{# ── MODAL NUEVA PELÍCULA ── #}
+<div id="uploadLayer" onclick="cerrarModal(event)">
+    <div class="modal">
+        <div class="modal-top">
+            <h3>Nueva Película</h3>
+            <button class="modal-x" onclick="cerrarModal(null, true)">✕</button>
+        </div>
+        <form action="{{ path('app_movie_upload') }}" method="POST" enctype="multipart/form-data">
+            <div class="field">
+                <label>Título *</label>
+                <input type="text" name="titulo" required placeholder="Ej: El Señor de los Anillos">
+            </div>
+            <div class="field">
+                <label>Descripción</label>
+                <input type="text" name="descripcion" placeholder="Breve sinopsis...">
+            </div>
+            <div class="field">
+                <label>Duración (minutos) *</label>
+                <input type="number" name="duracion" value="100" min="1" required>
+            </div>
+            <div class="field">
+                <label>Imagen de portada *</label>
+                <input type="file" name="portadaFile" accept="image/*" required>
+            </div>
+            <div class="field">
+                <label>Archivo de vídeo (.mp4) *</label>
+                <input type="file" name="movieFile" accept="video/*" required>
+            </div>
+            <button type="submit" class="btn-save">💾 Guardar en el Catálogo</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Navbar shadow al hacer scroll
+    window.addEventListener('scroll', () => {
+        document.getElementById('topbar').classList.toggle('shadow', window.scrollY > 20);
+    });
+
+    // Auto-ocultar flashes
+    document.querySelectorAll('.flash').forEach(el => {
+        setTimeout(() => {
+            el.style.transition = 'opacity .5s';
+            el.style.opacity = '0';
+        }, 4000);
+        setTimeout(() => el.remove(), 4600);
+    });
+
+    // ── Reproductor ──────────────────────────────────────
+    function verPelicula(archivo, titulo) {
+        document.getElementById('nowPlaying').textContent = '▶  ' + titulo;
+        document.getElementById('videoEl').src = '/pelicula/' + encodeURIComponent(archivo) + '/play';
+        document.getElementById('videoEl').play();
+        document.getElementById('playerLayer').classList.add('open');
+    }
+    function cerrarPlayer(e, forzar) {
+        if (forzar || e.target === document.getElementById('playerLayer')) {
+            const v = document.getElementById('videoEl');
+            v.pause(); v.src = '';
+            document.getElementById('playerLayer').classList.remove('open');
+        }
+    }
+
+    // ── Modal ─────────────────────────────────────────────
+    function abrirModal() {
+        document.getElementById('uploadLayer').classList.add('open');
+    }
+    function cerrarModal(e, forzar) {
+        if (forzar || e.target === document.getElementById('uploadLayer')) {
+            document.getElementById('uploadLayer').classList.remove('open');
+        }
+    }
+
+    // ── Búsqueda en tiempo real ───────────────────────────
+    function buscar(q) {
+        const term  = q.toLowerCase().trim();
+        const cards = document.querySelectorAll('.card');
+        let visible = 0;
+        let firstCard = null;
+        cards.forEach(c => {
+            const match = c.dataset.titulo.includes(term);
+            c.style.display = match ? '' : 'none';
+            if (match) { visible++; if (!firstCard) firstCard = c; }
+        });
+        const el = document.getElementById('counter');
+        if (el) el.textContent = visible + (visible === 1 ? ' película' : ' películas');
+        actualizarHero(firstCard, term);
+    }
+
+    // ── Hero dinámico ─────────────────────────────────────
+    var hero = document.getElementById('heroSection');
+    function actualizarHero(card, term) {
+        if (!hero) return;
+        if (!card) {
+            hero.style.opacity = '0';
+            hero.style.pointerEvents = 'none';
+            return;
+        }
+        hero.style.opacity = '1';
+        hero.style.pointerEvents = '';
+        const d = card.dataset;
+        hero.style.backgroundImage = `url('${d.portada}')`;
+        hero.querySelector('.hero-title').textContent = d.fullname;
+        const desc = hero.querySelector('.hero-desc');
+        if (desc) desc.textContent = d.desc || 'Sin descripción.';
+        const stats = hero.querySelectorAll('.hero-stat-val');
+        if (stats[0]) stats[0].textContent = d.duracion + ' min';
+        if (stats[1]) stats[1].textContent = d.year;
+        if (stats[2]) stats[2].textContent = d.pais;
+        const btnVer = hero.querySelector('.btn-watch');
+        if (btnVer) btnVer.onclick = () => verPelicula(d.archivo, d.fullname);
+    }
+
+    // ESC cierra lo que esté abierto
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Escape') return;
+        cerrarPlayer(null, true);
+        cerrarModal(null, true);
+    });
+</script>
+{% endblock %}

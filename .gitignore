@@ -1,0 +1,11 @@
+# Symfony
+symfony-main/vendor/
+symfony-main/var/cache/
+symfony-main/var/log/
+symfony-main/.env.local
+symfony-main/.env.*.local
+symfony-main/public/assets/
+
+# OS
+.DS_Store
+Thumbs.db

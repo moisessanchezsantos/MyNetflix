@@ -1,0 +1,6 @@
+controllers:
+    resource: routing.controllers
+
+easyadmin:
+    resource: .
+    type: easyadmin.routes
