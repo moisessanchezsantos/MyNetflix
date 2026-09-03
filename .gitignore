@@ -5,6 +5,8 @@ symfony-main/var/log/
 symfony-main/.env.local
 symfony-main/.env.*.local
 symfony-main/public/assets/
+symfony-main/.env
+*.sql
 
 # OS
 .DS_Store
