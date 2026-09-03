@@ -1,6 +1,6 @@
 # MyNetflix
 
-Aplicación web de catálogo y reproducción de películas, desarrollada como proyecto académico con Symfony y PHP. Incluye una parte pública para consultar películas y un área de administración para gestionar el catálogo.
+Aplicación web de catálogo y reproducción de películas, desarrollada como proyecto académico con PHP, más concretamente Symfony y un front sencillo. Incluye una parte pública para consultar películas y un área de administración para gestionar el catálogo.
 
 ## Funcionalidades
 
